@@ -60,7 +60,8 @@ autoWaterManifold(DailyVolume, NumberOfFlavours, WM) :-
 %%% ?- autoWaterManifold(3200, 6, WM).
 
 % Rule 20
-%% === HERE WE NEED TO FIX TODO === %%
+%% PythonLength is checked for validity by calculating the longest sum of precut lengths
+%% Additionally, check the list "Pieces" with the knowledge base of precut_python_lengths
 %% PythonLength for precut_length values
 precut_python_length(5).
 precut_python_length(10).
@@ -68,12 +69,8 @@ precut_python_length(15).
 precut_python_length(20).
 precut_python_length(30).
 
-%% python_length_sum(Total, ListOfPieces): Total is the sum of ListOfPieces, each a precut_length, Total > 30, in steps of 5
+%% python_length_sum(Total, ListOfPieces): Total is the sum of ListOfPieces, each a precut_length, Total > 30, in steps of 5 or the available precut_lengths
 python_length_longest_sum(Total, Pieces) :-
-    python_length_longest_sum_helper(0, Total, [], Pieces),
-    0 is Total mod 5, !.
-
-pythonLengthIsValid(Total, true) :-
     python_length_longest_sum_helper(0, Total, [], Pieces),
     0 is Total mod 5, !.
 
@@ -83,10 +80,16 @@ python_length_longest_sum_helper(Acc, Total, PiecesSoFar, Pieces) :-
     precut_python_length(L),
     NewAcc is Acc + L,
     NewAcc =< Total,
-    % Ensure L is the largest possible piece for the remaining length
     \+ (precut_python_length(L2), L2 > L, Acc + L2 =< Total),
     python_length_longest_sum_helper(NewAcc, Total, [L|PiecesSoFar], Pieces).
 
+% check any number (int) can be cut into valid precut lengths
+% check if each piece in the list is a valid_precut_length
+python_length_is_valid(Total) :-
+    Total > 30,
+    0 is Total mod 5,
+    python_length_longest_sum(Total, Pieces),
+    forall(member(P, Pieces), precut_python_length(P)), !.
 
 
 
@@ -101,7 +104,6 @@ rackAccessoires(_, _, 0, 0).
 %% Testing rackAccessoires(ez2, small, RackShelves, MountingBrackets)
 
 
-%% === IMPLEMENT NE PYTHONLENGTH TODO === %%
 % Complete validation with ALL 7 inputs (corrected)
 validConfigurationComplete(DailyVolume, CoolingCapacity, NumberOfFlavours, Region, PythonLength, RackType, Co2Mounting) :-
     % Rule 1-5: Check if chosen cooler fits daily volume
