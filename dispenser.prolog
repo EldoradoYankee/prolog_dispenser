@@ -66,11 +66,6 @@ python_length_longest_sum_helper(Acc, Total, PiecesSoFar, Pieces) :-
 
 
 
-% BibPump for range of NumberOfFlavours
-bib_pump(NumberOfFlavours, 6) :- NumberOfFlavours =< 6, NumberOfFlavours =< 9.
-bib_pump(NumberOfFlavours, 9) :- NumberOfFlavours > 10, NumberOfFlavours =< 12.
-bib_pump(NumberOfFlavours, 12) :- NumberOfFlavours = 12.
-
 % BIBPump for exact NumberOfFlavours
 bib_pump(6, 6).
 bib_pump(9, 9).
