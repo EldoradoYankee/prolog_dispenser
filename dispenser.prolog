@@ -24,7 +24,8 @@ rack_size(ez5, large).
 rack_size(ez6, large).
 
 % Co2-Regulator Mounting sizes for Type "rack"
-rack_size_type_rack(Type) :- Type = medium; Type = large.
+rack_size_type_rack(Type) :- Type = medium.
+rack_size_type_rack(Type) :- Type = large.
 
 % The RackType is independent of Co2-Regulator-Mounting when the mounting type is 'Wall'.
 rack_type('wall', _).  % Any rack type allowed
