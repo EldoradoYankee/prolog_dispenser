@@ -102,3 +102,38 @@ component(python_type).
 
 % A Config_ID got a component
 config_id_has(Config_ID, Component).
+
+
+% Each configuration includes exactly one of these components
+one_air_compressor(config(ID)) :- config(ID, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, air_compressor).
+one_water_booster(config(ID)) :- config(ID, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, water_booster).
+one_co2_regulator(config(ID)) :- config(ID, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, co2_regulator).
+one_water_manifold(config(ID)) :- config(ID, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, WaterManifold), water_manifold(WaterManifold, _, _).
+one_python_type(config(ID)) :- config(ID, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, PythonType), python_type(_, PythonType).
+
+% Cup size to content range in ml
+cup_volume(small, range(0, 100)).
+cup_volume(medium, range(101, 200)).
+cup_volume(large, range(201, 300)).
+cup_volume(extra_large, above(301)).
+
+% Configuration constraints checker
+valid_config(ID) :-
+    config(ID, Region, CoolingCapacity, DailyVolume, RackSize, Mounting, NumFlavours, BIBPump, PythonType, WaterManifold, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
+    regulator_fitting(Region, _),
+    valid_cooling_capacity(DailyVolume, CoolingCapacity),
+    rack_size(CoolingCapacity, RackSize),
+    (Mounting == wall ; rack_type(Mounting, RackSize)),
+    bib_pump(NumFlavours, BIBPump),
+    python_type(NumFlavours, PythonType),
+    water_manifold(WaterManifold, DailyVolume, NumFlavours),
+    one_air_compressor(config(ID)),
+    one_water_booster(config(ID)),
+    one_co2_regulator(config(ID)),
+    one_water_manifold(config(ID)),
+    one_python_type(config(ID)).
+
+% Alternative test rule for ez2 when DailyVolume is in range 1 to 2000
+valid_cooling_capacity_test(ez2, C) :- between(1, 2000, C).
+
+
