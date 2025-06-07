@@ -85,7 +85,7 @@ python_length_longest_sum_helper(Acc, Total, PiecesSoFar, Pieces) :-
 
 % check any number (int) can be cut into valid precut lengths
 % check if each piece in the list is a valid_precut_length
-python_length_is_valid(Total) :-
+pythonLengthIsValid(Total) :-
     Total > 30,
     0 is Total mod 5,
     python_length_longest_sum(Total, Pieces),
@@ -121,7 +121,7 @@ validConfigurationComplete(DailyVolume, CoolingCapacity, NumberOfFlavours, Regio
     % Rule 18-19: Check if water manifold configuration exists
     waterManifold(DailyVolume, NumberOfFlavours, _),
     % Rule 20: Check if python length is valid (divisible by 5)
-    pythonLengthIsValid(PythonLength, true), % change to new version
+    pythonLengthIsValid(PythonLength),
     % Rule 21-23: Check if rack accessories configuration exists
     rackAccessoires(CoolingCapacity, RackType, _, _).
 
@@ -155,13 +155,13 @@ validConfiguration(DailyVolume, NumberOfFlavours, Region, Cooler, RackType, Pyth
     % Rule 18-19: Check if water manifold configuration exists
     waterManifold(DailyVolume, NumberOfFlavours, _),
     % Rule 20: Check if python length is valid (divisible by 5)
-    python_length_longest_sum(PythonLength),
+    pythonLengthIsValid(PythonLength),
     % Rule 21-23: Check if rack accessories configuration exists
     rackAccessoires(Cooler, RackType, _, _).
 
 
 
-% Generate complete Bill of Materials (BOM) with all auto-added parts - ORIGINAL VERSION
+% Generate complete Bill of Materials (BOM) with all auto-added parts - ORIGINAL VERSION TODO rm?
 generateBOM(DailyVolume, NumberOfFlavours, Region, Cooler, RackType, PythonLength, BOM) :-
     % Check if Configuration is Ok
     validConfiguration(DailyVolume, NumberOfFlavours, Region, Cooler, RackType, PythonLength),
@@ -269,7 +269,7 @@ testCaseComplete(config6_complete, 5000, ez5, 9, eu, 25, large, wall).   % Now V
 
 % ===== SIMPLE TEST WRAPPER =====
 
-% Test a specific configuration by name - ORIGINAL
+% Test a specific configuration by name - ORIGINAL TODO rm?
 testConfig(ConfigName) :-
     testCase(ConfigName, DailyVolume, NumberOfFlavours, Region, Cooler, RackType, PythonLength),
     (validConfiguration(DailyVolume, NumberOfFlavours, Region, Cooler, RackType, PythonLength) ->
@@ -285,7 +285,7 @@ testConfigComplete(ConfigName) :-
     ;   (write(ConfigName), write(': INVALID ✗'), nl)
     ).
 
-% Test all configurations - ORIGINAL
+% Test all configurations - ORIGINAL TODO rm?
 testAllConfigs :-
     testCase(ConfigName, _, _, _, _, _, _),
     testConfig(ConfigName),
@@ -323,7 +323,7 @@ printBOMSection(_, _, _) :- nl.
 
 % ===== ENHANCED TEST FUNCTIONS =====
 
-% Test configuration and show complete BOM - ORIGINAL
+% Test configuration and show complete BOM - ORIGINAL TODO rm?
 testConfigWithBOM(ConfigName) :-
     testCase(ConfigName, DailyVolume, NumberOfFlavours, Region, Cooler, RackType, PythonLength),
     write('Testing '), write(ConfigName), write(':'), nl,
@@ -343,7 +343,7 @@ testConfigWithBOMComplete(ConfigName) :-
     ;   (write('RESULT: INVALID ✗'), nl)
     ).
 
-% Test all configurations with BOM output - ORIGINAL
+% Test all configurations with BOM output - ORIGINAL TODO rm?
 testAllConfigsWithBOM :-
     testCase(ConfigName, _, _, _, _, _, _),
     nl, write('======= '), write(ConfigName), write(' ======='), nl,
@@ -359,7 +359,7 @@ testAllConfigsWithBOMComplete :-
     fail.
 testAllConfigsWithBOMComplete.
 
-% Get BOM for custom configuration - ORIGINAL
+% Get BOM for custom configuration - ORIGINAL TODO rm?
 customBOM(DailyVolume, NumberOfFlavours, Region, Cooler, RackType, PythonLength) :-
     (validConfigurationWithBOM(DailyVolume, NumberOfFlavours, Region, Cooler, RackType, PythonLength, BOM) ->
         (write('Configuration is VALID ✓'), nl,
