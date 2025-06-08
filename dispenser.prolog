@@ -112,8 +112,22 @@ rackAccessoires(Cooler, RackType, 0, 0) :- Cooler = ez2, RackType = small, !.
 rackAccessoires(_, _, 0, 0).
 
 %% Validates that rack accessories configuration is available for the cooler and rack combination
-rackAccessoriesConfigurationExists(Cooler, RackType) :- rackAccessoires(Cooler, RackType, _, _).
+rackAccessoriesConfigurationExists(Cooler, RackType, MountingBrackets) :- rackAccessoires(Cooler, RackType, _, MountingBrackets).
 %%% Test queries: ?- rackAccessoriesConfigurationExists(ez5, large). ?- rackAccessoriesConfigurationExists(ez2, small).
+
+% Rule 24: Hardware Components for Mounting Brackets
+%% This rule determines required screws and dowels based on mounting bracket quantity
+%% Each mounting bracket requires specific hardware components for proper installation
+mountingHardware(MountingBrackets, Screws, Dowels) :-
+    MountingBrackets > 0,
+    Screws is MountingBrackets * 4,
+    Dowels is MountingBrackets * 2, !.
+mountingHardware(0, 0, 0).
+
+%% Validates that mounting hardware configuration is available for the bracket quantity
+mountingHardwareConfigurationExists(MountingBrackets) :- mountingHardware(MountingBrackets, _, _).
+%%% Test queries: ?- mountingHardware(4, Screws, Dowels). ?- mountingHardware(0, Screws, Dowels).
+
 
 % Complete Configuration Validation
 %% Validation predicates provide business-readable interfaces to technical rule implementations,
@@ -137,7 +151,9 @@ validateCompleteConfiguration(DailyVolume, CoolingCapacity, NumberOfFlavours, Re
     % Rule 20: Check if python length meets manufacturing standards
     pythonLengthIsValid(PythonLength),
     % Rule 21-23: Check if rack accessories configuration exists
-    rackAccessoriesConfigurationExists(CoolingCapacity, RackType).
+    rackAccessoriesConfigurationExists(CoolingCapacity, RackType, MountingBrackets),
+    % Rule 24: Check if the calculation exists correclty
+    mountingHardwareConfigurationExists(MountingBrackets).
 %%% Test query: ?- validateCompleteConfiguration(2000, ez2, 6, eu, 20, small, wall).
 
 % Test Cases from Business Requirements
@@ -145,31 +161,31 @@ validateCompleteConfiguration(DailyVolume, CoolingCapacity, NumberOfFlavours, Re
 %% Each case tests different aspects of the validation logic with known outcomes
 
 % Configuration 1: Standard valid setup
-testCase(config1_excel, 2000, ez2, 9, eu, 40, medium, rack).
+testCase(config1, 2000, ez2, 9, eu, 40, medium, rack).
 
 % Configuration 2: Invalid - EZ5 requires large rack, not small
-testCase(config2_excel, 7000, ez5, 6, eu, 60, small, wall).
+testCase(config2, 7000, ez5, 6, eu, 60, small, wall).
 
 % Configuration 3: Standard valid medium-capacity setup
-testCase(config3_excel, 4000, ez4, 9, me, 10, medium, wall).
+testCase(config3, 4000, ez4, 9, me, 10, medium, wall).
 
 % Configuration 4: Valid oversized cooler selection
-testCase(config4_excel, 2000, ez5, 6, us, 25, large, rack).
+testCase(config4, 2000, ez5, 6, us, 25, large, rack).
 
 % Configuration 5: Invalid - EZ2 capacity exceeded
-testCase(config5_excel, 3500, ez2, 12, eu, 20, large, rack).
+testCase(config5, 3500, ez2, 12, eu, 20, large, rack).
 
 % Configuration 6: Invalid - Python length not divisible by 5
-testCase(config6_excel, 5000, ez5, 9, eu, 23, large, rack).
+testCase(config6, 5000, ez5, 9, eu, 23, large, rack).
 
 % Configuration 7: High-capacity valid setup
-testCase(config7_excel, 5000, ez5, 6, eu, 50, large, rack).
+testCase(config7, 5000, ez5, 6, eu, 50, large, rack).
 
 % Configuration 8: Minimal valid configuration
-testCase(config8_excel, 2000, ez2, 6, eu, 20, small, wall).
+testCase(config8, 2000, ez2, 6, eu, 20, small, wall).
 
 % Configuration 9: Standard medium-capacity setup
-testCase(config9_excel, 4000, ez4, 6, eu, 30, medium, wall).
+testCase(config9, 4000, ez4, 6, eu, 30, medium, wall).
 
 % Test Execution Predicates
 %% These predicates provide automated testing capabilities for configuration validation
@@ -180,23 +196,23 @@ testConfig(ConfigName) :-
     testCase(ConfigName, DailyVolume, CoolingCapacity, NumberOfFlavours, Region, PythonLength, RackType, Co2Mounting),
     write('Testing '), write(ConfigName), write(': '),
     (validateCompleteConfiguration(DailyVolume, CoolingCapacity, NumberOfFlavours, Region, PythonLength, RackType, Co2Mounting) ->
-        write('VALID ✓')
+        (write(ConfigName), write(' is VALID'), nl, writeCalculatedValues(CoolingCapacity, RackType))
     ;   write('INVALID ✗')
     ), nl.
-%%% Test query: ?- testConfig(config1_excel).
+%%% Test query: ?- testConfig(config1).
 
 %% Executes validation tests for all predefined configurations
 testAllExcelConfigs :-
     write('===== CONFIGURATION VALIDATION RESULTS ====='), nl,
-    testConfig(config1_excel),
-    testConfig(config2_excel),
-    testConfig(config3_excel),
-    testConfig(config4_excel),
-    testConfig(config5_excel),
-    testConfig(config6_excel),
-    testConfig(config7_excel),
-    testConfig(config8_excel),
-    testConfig(config9_excel),
+    testConfig(config1),
+    testConfig(config2),
+    testConfig(config3),
+    testConfig(config4),
+    testConfig(config5),
+    testConfig(config6),
+    testConfig(config7),
+    testConfig(config8),
+    testConfig(config9),
     write('=========================================='), nl.
 %%% Test query: ?- testAllExcelConfigs.
 
@@ -204,7 +220,19 @@ testAllExcelConfigs :-
 quickCheck(ConfigName) :-
     testCase(ConfigName, DailyVolume, CoolingCapacity, NumberOfFlavours, Region, PythonLength, RackType, Co2Mounting),
     (validateCompleteConfiguration(DailyVolume, CoolingCapacity, NumberOfFlavours, Region, PythonLength, RackType, Co2Mounting) ->
-        (write(ConfigName), write(' is VALID'))
+        (write(ConfigName), write(' is VALID'), nl, writeCalculatedValues(CoolingCapacity, RackType))
     ;   (write(ConfigName), write(' is INVALID'))
     ), nl.
-%%% Test query: ?- quickCheck(config5_excel).
+%%% Test query: ?- quickCheck(config5).
+
+
+% Write the calculated Mounting Brackets, screws etc. after a valid configuration.
+writeCalculatedValues(Cooler, RackType) :-
+    write('Auto added parts'), nl,
+    rackAccessoires(Cooler, RackType, Shelves, MountingBrackets),
+    write('Shelves: '), write(Shelves), nl,
+    write('Mounting Brackets: '), write(MountingBrackets), nl,
+    mountingHardware(MountingBrackets, Screws, Dowels),
+    write('Screws: '), write(Screws), nl,
+    write('Dowels: '), write(Dowels), nl.
+
