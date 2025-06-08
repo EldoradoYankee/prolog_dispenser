@@ -118,15 +118,15 @@ rackAccessoriesConfigurationExists(Cooler, RackType, MountingBrackets) :- rackAc
 % Rule 24: Hardware Components for Mounting Brackets
 %% This rule determines required screws and dowels based on mounting bracket quantity
 %% Each mounting bracket requires specific hardware components for proper installation
-mountingHardware(MountingBrackets, Screws, Dowels) :-
+mountingComponents(MountingBrackets, Screws, Dowels) :-
     MountingBrackets > 0,
     Screws is MountingBrackets * 4,
     Dowels is MountingBrackets * 2, !.
-mountingHardware(0, 0, 0).
+mountingComponents(0, 0, 0).
 
 %% Validates that mounting hardware configuration is available for the bracket quantity
-mountingHardwareConfigurationExists(MountingBrackets) :- mountingHardware(MountingBrackets, _, _).
-%%% Test queries: ?- mountingHardware(4, Screws, Dowels). ?- mountingHardware(0, Screws, Dowels).
+mountingComponentsConfigurationExists(MountingBrackets) :- mountingComponents(MountingBrackets, _, _).
+%%% Test queries: ?- mountingComponents(4, Screws, Dowels). ?- mountingComponents(0, Screws, Dowels).
 
 
 % Complete Configuration Validation
@@ -153,7 +153,7 @@ validateCompleteConfiguration(DailyVolume, CoolingCapacity, NumberOfFlavours, Re
     % Rule 21-23: Check if rack accessories configuration exists
     rackAccessoriesConfigurationExists(CoolingCapacity, RackType, MountingBrackets),
     % Rule 24: Check if the calculation exists correclty
-    mountingHardwareConfigurationExists(MountingBrackets).
+    mountingComponentsConfigurationExists(MountingBrackets).
 %%% Test query: ?- validateCompleteConfiguration(2000, ez2, 6, eu, 20, small, wall).
 
 % Test Cases from Business Requirements
@@ -225,14 +225,13 @@ quickCheck(ConfigName) :-
     ), nl.
 %%% Test query: ?- quickCheck(config5).
 
-
 % Write the calculated Mounting Brackets, screws etc. after a valid configuration.
 writeCalculatedValues(Cooler, RackType) :-
     write('Auto added parts'), nl,
     rackAccessoires(Cooler, RackType, Shelves, MountingBrackets),
     write('Shelves: '), write(Shelves), nl,
     write('Mounting Brackets: '), write(MountingBrackets), nl,
-    mountingHardware(MountingBrackets, Screws, Dowels),
+    mountingComponents(MountingBrackets, Screws, Dowels),
     write('Screws: '), write(Screws), nl,
     write('Dowels: '), write(Dowels), nl.
 
