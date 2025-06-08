@@ -86,8 +86,10 @@ waterManifoldFits(DailyVolume, NumberOfFlavours) :- waterManifold(DailyVolume, N
 %%% Test queries: ?- waterManifoldFits(3200, 6). ?- waterManifoldFits(2500, 12).
 
 % Rule 20: Python Length Validation
-%% This rule validates that python lengths are compatible with precut standards
-%% All lengths must be divisible by 5 to accommodate standard precut pieces
+%% This rule validates python length compatibility with manufacturing standards and
+%% provides optimal precut specifications for shipping operations
+%% Validation ensures all lengths are divisible by 5 to accommodate standard precut pieces
+%% Specification generation uses recursive optimization to minimize total piece count
 precutPythonLength(5).
 precutPythonLength(10).
 precutPythonLength(15).
@@ -98,8 +100,22 @@ precutPythonLength(30).
 pythonLengthIsValid(Total) :-
     Total > 0,
     0 is Total mod 5.
-
 %%% Test queries: ?- pythonLengthIsValid(25). ?- pythonLengthIsValid(23).
+
+%% This functionalit calculates the combinations of precut lengths
+calculateOptimalPythonPrecuts(TotalLength, []) :- 
+    TotalLength =< 0, !.
+
+calculateOptimalPythonPrecuts(TotalLength, [Piece|RestPieces]) :-
+    TotalLength > 0,
+    findLargestPiece(TotalLength, Piece),
+    RemainingLength is TotalLength - Piece,
+    calculateOptimalPythonPrecuts(RemainingLength, RestPieces).
+
+%% Helper predicate to identify the largest precut piece that fits the requirement
+findLargestPiece(RequiredLength, SelectedPiece) :-
+    findall(Piece, (precutPythonLength(Piece), Piece =< RequiredLength), AvailablePieces),
+    max_list(AvailablePieces, SelectedPiece).
 
 % Rules 21 - 23: Rack Accessories Configuration
 %% These rules determine the required rack accessories based on cooler and rack type
@@ -196,7 +212,7 @@ testConfig(ConfigName) :-
     testCase(ConfigName, DailyVolume, CoolingCapacity, NumberOfFlavours, Region, PythonLength, RackType, Co2Mounting),
     write('Testing '), write(ConfigName), write(': '),
     (validateCompleteConfiguration(DailyVolume, CoolingCapacity, NumberOfFlavours, Region, PythonLength, RackType, Co2Mounting) ->
-        (write(ConfigName), write(' is VALID'), nl, writeCalculatedValues(CoolingCapacity, RackType))
+        (write(ConfigName), write(' is VALID'), nl, writeCalculatedValues(CoolingCapacity, RackType, PythonLength))
     ;   write('INVALID ✗')
     ), nl.
 %%% Test query: ?- testConfig(config1).
@@ -220,18 +236,19 @@ testAllExcelConfigs :-
 quickCheck(ConfigName) :-
     testCase(ConfigName, DailyVolume, CoolingCapacity, NumberOfFlavours, Region, PythonLength, RackType, Co2Mounting),
     (validateCompleteConfiguration(DailyVolume, CoolingCapacity, NumberOfFlavours, Region, PythonLength, RackType, Co2Mounting) ->
-        (write(ConfigName), write(' is VALID'), nl, writeCalculatedValues(CoolingCapacity, RackType))
+        (write(ConfigName), write(' is VALID'), nl, writeCalculatedValues(CoolingCapacity, RackType, PythonLength))
     ;   (write(ConfigName), write(' is INVALID'))
     ), nl.
 %%% Test query: ?- quickCheck(config5).
 
-% Write the calculated Mounting Brackets, screws etc. after a valid configuration.
-writeCalculatedValues(Cooler, RackType) :-
-    write('Auto added parts'), nl,
+% Write the calculated Mounting Brackets, screws, python precuts etc. after a valid configuration.
+writeCalculatedValues(Cooler, RackType, PythonLength) :-
+    write('Calculated / Auto added parts'), nl,
     rackAccessoires(Cooler, RackType, Shelves, MountingBrackets),
     write('Shelves: '), write(Shelves), nl,
     write('Mounting Brackets: '), write(MountingBrackets), nl,
     mountingComponents(MountingBrackets, Screws, Dowels),
     write('Screws: '), write(Screws), nl,
-    write('Dowels: '), write(Dowels), nl.
-
+    write('Dowels: '), write(Dowels), nl,
+    calculateOptimalPythonPrecuts(PythonLength, PrecutPieces),
+    write('Python Precut Pieces: '), write(PrecutPieces), nl.
